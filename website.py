@@ -67,28 +67,34 @@ with row6_1:
     st.table(data=df.reset_index(drop=True))
 
 
-def group_measure_by_attribute(aspect,attribute,measure):
-    df_data = df_total
-    df_return = pd.DataFrame()
-    if(measure == "Total"):
-        df_return = df_data.groupby([aspect]).sum()            
+def group_measure_by_attribute(aspect, attribute, measure):
+  """Groups and measures data based on specified aspect, attribute, and measure."""
+  df_data = df_total
+  df_return = pd.DataFrame()
+  
+  if measure == "Total":
+    df_return = df_data.groupby([aspect]).sum()
     
-    if(measure == "Mean"):
-        df_return = df_data.groupby([aspect]).mean()
-        
-    if(measure == "Median"):
-        df_return = df_data.groupby([aspect]).median()
+  elif measure == "Mean":
+    # Check for non-numeric data type before applying mean
+    if df_data[attribute].dtypes != 'object':
+      df_return = df_data.groupby([aspect]).mean()
+    else:
+      # Print warning message and skip mean calculation for non-numeric data
+      print("WARNING: The attribute", attribute, "contains non-numeric data. Mean calculation skipped.")
+      
+  elif measure == "Median":
+    df_return = df_data.groupby([aspect]).median()
+    
+  elif measure in ["Minimum", "Maximum"]:
+    df_return = df_data.groupby([aspect]).agg({attribute: measure})
+    
+  df_return["aspect"] = df_return.index
+  if aspect == "team":
+    df_return = df_return.sort_values(by=[attribute], ascending=False)
+    
+  return df_return
 
-    if(measure == "Minimum"):
-        df_return = df_data.groupby([aspect]).min()
-    
-    if(measure == "Maximum"):
-        df_return = df_data.groupby([aspect]).max()
-    
-    df_return["aspect"] = df_return.index
-    if aspect == "team":
-        df_return = df_return.sort_values(by=[attribute], ascending = False)
-    return df_return
 
 
 ### PLOTS - TEAM ANALYSIS ###

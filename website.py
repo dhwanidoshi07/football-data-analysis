@@ -68,32 +68,38 @@ with row6_1:
 
 
 def group_measure_by_attribute(aspect, attribute, measure):
-  """Groups and measures data based on specified aspect, attribute, and measure."""
-  df_data = df_total
-  df_return = pd.DataFrame()
-  
-  if measure == "Total":
-    df_return = df_data.groupby([aspect]).sum()
+    """Groups and measures data based on specified aspect, attribute, and measure."""
+    df_data = df_total.copy()  # Make a copy to avoid modifying original DataFrame
+    df_return = pd.DataFrame()
+
+    if aspect not in df_data.columns:
+        print(f"ERROR: Aspect '{aspect}' not found in DataFrame.")
+        return df_return
     
-  elif measure == "Mean":
-    # Check for non-numeric data type before applying mean
-    if df_data[attribute].dtypes != 'object':
-      df_return = df_data.groupby([aspect]).mean()
-    else:
-      # Print warning message and skip mean calculation for non-numeric data
-      print("WARNING: The attribute", attribute, "contains non-numeric data. Mean calculation skipped.")
-      
-  elif measure == "Median":
-    df_return = df_data.groupby([aspect]).median()
-    
-  elif measure in ["Minimum", "Maximum"]:
-    df_return = df_data.groupby([aspect]).agg({attribute: measure})
-    
-  df_return["aspect"] = df_return.index
-  if aspect == "team":
-    df_return = df_return.sort_values(by=[attribute], ascending=False)
-    
-  return df_return
+    if attribute not in df_data.columns:
+        print(f"ERROR: Attribute '{attribute}' not found in DataFrame.")
+        return df_return
+
+    if measure == "Total":
+        df_return = df_data.groupby([aspect])[attribute].sum()
+
+    elif measure == "Mean":
+        # Check for non-numeric data type before applying mean
+        if pd.api.types.is_numeric_dtype(df_data[attribute]):
+            df_return = df_data.groupby([aspect])[attribute].mean()
+        else:
+            # Print warning message and skip mean calculation for non-numeric data
+            print(f"WARNING: The attribute '{attribute}' contains non-numeric data. Mean calculation skipped.")
+            return df_return
+
+    elif measure == "Median":
+        df_return = df_data.groupby([aspect])[attribute].median()
+
+    elif measure in ["Minimum", "Maximum"]:
+        df_return = df_data.groupby([aspect])[attribute].agg(measure)
+
+    return df_return.reset_index()
+
 
 
 

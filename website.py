@@ -11,9 +11,9 @@ with open('style.css') as f:
 
 ### Data Import ###
 
-final_data = pd.read_csv("data/final_table.csv")
-df = pd.read_csv("data/this_week.csv")
-df_total = pd.read_csv("data/df_total.csv")
+final_data = pd.read_csv("./data/final_table.csv")
+df = pd.read_csv("./data/this_week.csv")
+df_total = pd.read_csv("./data/df_total.csv")
 
 ### DICTIONARIES ###
 
@@ -99,9 +99,9 @@ def group_measure_by_attribute(aspect, attribute, measure):
 
 ### PLOTS - TEAM ANALYSIS ###
 
-def plot_x_per_team(attr,measure): 
-    rc = {'figure.figsize':(8,4.5),
-          'axes.facecolor':'white',
+def plot_x_per_team(attr, measure): 
+    rc = {'figure.figsize': (8, 4.5),
+          'axes.facecolor': 'white',
           'axes.edgecolor': 'white',
           'axes.labelcolor': 'black',
           'figure.facecolor': 'white',
@@ -109,48 +109,53 @@ def plot_x_per_team(attr,measure):
           'text.color': 'black',
           'xtick.color': 'black',
           'ytick.color': 'black',
-          'font.size' : 8,
+          'font.size': 8,
           'axes.labelsize': 12,
           'xtick.labelsize': 8,
           'ytick.labelsize': 12}
     
     plt.rcParams.update(rc)
     fig, ax = plt.subplots()
-    ### Goals
+
+    # Extract the attribute name from the dictionary
     attribute = label_attr_dict_teams[attr]
-    df_plot = pd.DataFrame()
-    df_plot = group_measure_by_attribute("Team",attribute,measure)
-
-    ax = sns.barplot(x="aspect", y=attribute, data=df_plot.reset_index(), color = "#0b70f3")
     
+    # Call group_measure_by_attribute function
+    df_plot = group_measure_by_attribute("Team", attribute, measure)
 
-    y_str = measure + " " + attr + " " + "per Game"
-    if measure == "Absolute":
-        y_str = measure + " " + attr
-    if measure == "Minimum" or measure == "Maximum":
-        y_str = measure + " " + attr + " in a Game"
-    ax.set(xlabel = "Team", ylabel = y_str)
-    plt.xticks(rotation=66,horizontalalignment="right")
+    if not df_plot.empty:
+        ax = sns.barplot(x="aspect", y=attribute, data=df_plot.reset_index(), color="#0b70f3")
 
-    if measure == "Mean": #more accurate result in float dtype instead of int
+        y_str = f"{measure} {attr} per Game"
+        if measure == "Absolute":
+            y_str = f"{measure} {attr}"
+        if measure in ["Minimum", "Maximum"]:
+            y_str = f"{measure} {attr} in a Game"
+
+        ax.set(xlabel="Team", ylabel=y_str)
+        plt.xticks(rotation=66, horizontalalignment="right")
+
         for p in ax.patches:
-            ax.annotate(format(p.get_height(), '.2f'), 
-                  (p.get_x() + p.get_width() / 2., p.get_height()),
-                   ha = 'center',
-                   va = 'center', 
-                   xytext = (0, 18),
-                   rotation = 90,
-                   textcoords = 'offset points')
+            if measure == "Mean":
+                ax.annotate(format(p.get_height(), '.2f'), 
+                            (p.get_x() + p.get_width() / 2., p.get_height()),
+                            ha='center',
+                            va='center',
+                            xytext=(0, 18),
+                            rotation=90,
+                            textcoords='offset points')
+            else:
+                ax.annotate(format(str(int(p.get_height()))), 
+                            (p.get_x() + p.get_width() / 2., p.get_height()),
+                            ha='center',
+                            va='center',
+                            xytext=(0, 18),
+                            rotation=90,
+                            textcoords='offset points')
+        st.pyplot(fig)
     else:
-        for p in ax.patches:
-            ax.annotate(format(str(int(p.get_height()))), 
-                  (p.get_x() + p.get_width() / 2., p.get_height()),
-                   ha = 'center',
-                   va = 'center', 
-                   xytext = (0, 18),
-                   rotation = 90,
-                   textcoords = 'offset points')
-    st.pyplot(fig)
+        st.error("No data available for plotting.")
+
 
 ### PLOTS - SEASON ANALYSIS ###
 
